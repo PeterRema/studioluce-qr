@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0a1d3a">
+<title>Gestione sondaggi · Dove la luce incontra il suono</title>
+<link rel="stylesheet" href="./brand.css">
+<style>
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 30px;border-bottom:1px solid var(--copper-line);background:#0a1d3acc;backdrop-filter:blur(6px)}
+.top .logos{--logo-h:40px}
+.top-right{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--muted)}
+.shell{max-width:1440px;margin:auto;padding:34px 30px 60px}
+.heading{margin-bottom:26px}
+.heading h1{font-weight:800;text-transform:uppercase;font-size:clamp(26px,3.2vw,38px);line-height:1.08;margin:0 0 8px;color:var(--white)}
+.heading .tagline{font-style:italic;font-weight:600;font-size:15px;color:var(--white);margin:0 0 6px}
+.heading .sub{font-style:italic;font-weight:300;font-size:13px;color:var(--muted);margin:0;max-width:70ch}
+.grid{display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:18px;align-items:start}
+.card{border:1px solid var(--copper-line);border-radius:20px;background:linear-gradient(160deg,#10294fee,#0a1d3aee);box-shadow:0 20px 50px #020a1a55}
+.session-panel{padding:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.panel-head strong{font-weight:700;font-size:15px;color:var(--white)}
+.panel-head span{font-size:12px;color:var(--soft)}
+.session-list{display:grid;gap:6px;max-height:620px;overflow:auto}
+.session{display:block;width:100%;padding:11px 12px;text-align:left;border-radius:12px;border:1px solid transparent;background:#ffffff05;color:var(--muted);cursor:pointer}
+.session:hover{background:#ffffff0b}
+.session.active{border-color:var(--copper-dim);background:#c39a8014;color:var(--white)}
+.session strong{display:block;font-size:13px;font-weight:600;color:var(--text)}
+.session small{display:block;font-size:11px;color:var(--soft);margin-top:4px}
+.status{float:right;font-size:11px;font-weight:600;color:var(--copper-light)}
+.status.closed{color:var(--soft);font-weight:400}
+.empty{color:var(--soft);font-size:13px;font-style:italic;font-weight:300;line-height:1.6;padding:10px 4px}
+.main-panel{padding:26px;min-height:440px}
+.session-title{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.session-title h2{font-weight:800;text-transform:uppercase;font-size:22px;line-height:1.15;margin:0 0 6px;color:var(--white)}
+.session-title p{font-size:12px;font-style:italic;font-weight:300;color:var(--muted);margin:0}
+.state{font-size:12px;font-weight:600;border:1px solid var(--copper-dim);border-radius:99px;padding:6px 12px;color:var(--copper-light);white-space:nowrap}
+.state.closed{border-color:#ffffff22;color:var(--soft);font-weight:400}
+.stats{display:flex;gap:28px;margin:22px 0;padding:16px 0;border-top:1px solid var(--copper-line);border-bottom:1px solid var(--copper-line)}
+.stat strong{display:block;font-weight:800;font-size:28px;line-height:1;color:var(--white)}
+.stat span{display:block;font-size:12px;font-style:italic;font-weight:300;color:var(--muted);margin-top:4px}
+.close-row{margin-bottom:8px}
+.questions{display:grid}
+.qrow{padding:18px 0;border-bottom:1px solid var(--copper-line)}
+.qrow:last-child{border-bottom:0}
+.qrow h3{font-weight:600;font-size:15px;line-height:1.45;margin:0 0 4px;color:var(--white)}
+.qmeta{font-size:12px;font-style:italic;font-weight:300;color:var(--muted);margin:0 0 12px}
+.qmeta b{font-style:normal;font-weight:600;color:var(--copper-light)}
+.bars{display:grid;gap:9px}
+.barrow{display:grid;grid-template-columns:minmax(110px,1fr) minmax(80px,1.7fr) 74px;gap:12px;align-items:center}
+.barlabel{font-size:13px;color:var(--text);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.track{height:6px;border-radius:6px;background:#ffffff14;overflow:hidden}
+.fill{display:block;height:100%;border-radius:6px;background:var(--copper);transition:width .7s}
+.pct{text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pct b{color:var(--white);font-weight:700}
+.side{display:grid;gap:18px}
+.create-card,.qr-card{padding:20px}
+.side h3{font-weight:700;font-size:15px;margin:0 0 6px;color:var(--white)}
+.side p{font-size:12px;font-style:italic;font-weight:300;color:var(--muted);line-height:1.55;margin:0 0 12px}
+.select{width:100%;background:var(--navy-deep);color:var(--text);border:1px solid var(--copper-line);border-radius:12px;padding:11px 12px;font-size:13px;margin:4px 0 12px}
+.full{width:100%}
+.ghost{margin-top:8px;border-color:transparent;color:var(--muted);font-weight:400;font-size:12px}
+.qr-area{margin:14px auto 12px;width:184px;height:184px;background:#fff;border-radius:16px;display:grid;place-items:center;padding:10px;box-shadow:0 0 0 1px var(--copper),0 0 0 6px #c39a8022}
+.qr-area canvas{max-width:100%;max-height:100%}
+.qr-placeholder{font-size:12px;text-align:center;color:#7f8fab}
+.link{font-size:13px;text-align:center}
+.link a{color:var(--copper-light);font-weight:500}
+.foot{font-size:11px;font-style:italic;font-weight:300;color:var(--soft);line-height:1.5;margin-top:10px;text-align:center}
+.notice{padding:12px 16px;border:1px solid var(--copper-dim);background:#c39a800d;border-radius:14px;color:var(--text);font-size:13px;line-height:1.55;margin-bottom:18px}
+.notice.warn{border-color:#f19a8e66;background:#f19a8e0f;color:#f7cfc8}
+.field{width:100%;padding:11px 12px;border:1px solid var(--copper-line);border-radius:12px;background:var(--navy-deep);color:var(--white);margin:5px 0 12px;font-size:13px}
+.builder{border-top:1px solid var(--copper-line);margin-top:16px;padding-top:14px}
+.builder summary{cursor:pointer;color:var(--white);font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.builder summary::-webkit-details-marker{display:none}
+.builder summary:after{content:'+';color:var(--copper);font-size:20px;font-weight:300;line-height:1}
+.builder[open] summary:after{content:'−'}
+.builder label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin:10px 0 4px}
+.builder textarea{width:100%;min-height:56px;resize:vertical;padding:10px 12px;border:1px solid var(--copper-line);border-radius:12px;background:var(--navy-deep);color:var(--white);font-size:13px;line-height:1.5}
+.question-block{border-top:1px solid var(--copper-line);padding-top:6px;margin-top:12px}
+.question-block>strong{display:block;font-weight:700;font-size:13px;margin-top:10px;color:var(--copper-light)}
+.multi-toggle{display:flex!important;align-items:center;gap:10px;margin:10px 0 2px!important;cursor:pointer;color:var(--text)!important;font-size:13px!important}
+.multi-toggle input{appearance:none;width:38px;height:22px;border-radius:99px;background:#ffffff1f;border:1px solid #ffffff2a;position:relative;flex:none;cursor:pointer;margin:0;transition:background .15s}
+.multi-toggle input:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.multi-toggle input:checked{background:var(--copper);border-color:var(--copper)}
+.multi-toggle input:checked:after{transform:translateX(16px);background:var(--navy-deep)}
+.builder-note{color:var(--soft)!important;font-size:12px!important;margin:6px 0 10px!important}
+.login{position:fixed;inset:0;z-index:15;background:#061430f2;display:grid;place-items:center;padding:16px}
+.login-card{width:min(420px,100%);padding:28px}
+.login-card .logos{--logo-h:44px;margin-bottom:22px}
+.login-card h2{font-weight:800;text-transform:uppercase;font-size:22px;margin:0 0 6px;color:var(--white)}
+.login-card p{font-size:13px;font-style:italic;font-weight:300;color:var(--muted);line-height:1.6;margin:0 0 16px}
+.login-card label{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+@media(max-width:1120px){.grid{grid-template-columns:250px minmax(0,1fr)}.side{grid-column:1/-1;grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.top{padding:12px 16px}.top .logos{--logo-h:30px;gap:8px}.top-right #adminEmail{display:none}.shell{padding:24px 14px 40px}.grid{grid-template-columns:1fr}.session-panel{order:2}.main-panel{order:1;padding:20px}.side{order:3;grid-column:auto;grid-template-columns:1fr}.session-list{max-height:260px}.barrow{grid-template-columns:minmax(80px,1fr) minmax(55px,1.2fr) 64px}}
+</style>
+</head>
+<body>
+<div class="decor" aria-hidden="true"><div class="blob"></div><div class="ribbon"></div></div>
+<header class="top">
+  <div class="logos"><span class="logo studio-luce" role="img" aria-label="Studio Luce Gruppo Comet"></span><span class="logo its" role="img" aria-label="ITS Impianti Tecnologici Speciali Gruppo Comet"></span></div>
+  <div class="top-right"><div class="date-line"><b>20 NOVEMBRE 2026</b><span>ORE 17.45</span></div><span id="adminEmail"></span><button class="btn hidden" id="logout" type="button">Esci</button></div>
+</header>
+<main class="shell">
+  <div class="heading">
+    <h1>Dove la luce incontra il suono</h1>
+    <p class="tagline">Tu progetti l’emozione, la tecnologia fa il resto.</p>
+    <p class="sub">Crea un sondaggio, mostra il QR alla sala e segui le risposte in diretta. Ogni sessione chiusa resta nello storico.</p>
+  </div>
+  <div class="notice" id="setupNotice">Configurazione richiesta: inserisci URL e chiave pubblica Supabase in <b>config.js</b>, poi esegui <b>database.sql</b> nel progetto Supabase.</div>
+  <div class="notice warn hidden" id="adminNotice"></div>
+  <div class="grid">
+    <aside class="card session-panel"><div class="panel-head"><strong>Storico sessioni</strong><span id="sessionNumber">0</span></div><div class="session-list" id="sessionList"><div class="empty">Accedi per consultare lo storico.</div></div></aside>
+    <section class="card main-panel"><div id="sessionView"><div class="empty">Seleziona una sessione nello storico o avviane una nuova.</div></div></section>
+    <aside class="side">
+      <section class="card create-card">
+        <h3>Avvia un sondaggio</h3>
+        <p>Ogni avvio crea una sessione con un QR dedicato. Lo storico resta conservato.</p>
+        <select class="select" id="pollChoice" aria-label="Modello di sondaggio"></select>
+        <button class="btn primary full" id="createSession" type="button">Avvia sessione</button>
+        <button class="btn ghost full hidden" id="archivePoll" type="button">Togli questo modello dall’elenco</button>
+        <details class="builder" id="builder">
+          <summary>Crea un nuovo modello</summary>
+          <p class="builder-note">Tre domande, da 2 a 10 opzioni ciascuna. Per ogni domanda decidi se accettare una sola risposta o più risposte.</p>
+          <label for="newPollTitle">Titolo del sondaggio</label>
+          <input class="field" id="newPollTitle" maxlength="80" placeholder="Es. Luce e suono in casa">
+          <div id="questionBuilder"></div>
+          <button class="btn primary full" id="saveCustomPoll" type="button">Crea e avvia</button>
+          <p class="builder-note" id="builderStatus" role="status"></p>
+        </details>
+      </section>
+      <section class="card qr-card">
+        <h3>QR per il pubblico</h3>
+        <p id="qrHint">Avvia una sessione per mostrare il QR code.</p>
+        <div class="qr-area" id="qrArea"><span class="qr-placeholder">QR sessione</span></div>
+        <div class="link" id="clientLink"></div>
+        <div class="foot">Il QR apre direttamente il sondaggio selezionato.</div>
+      </section>
+    </aside>
+  </div>
+</main>
+<div class="login hidden" id="login">
+  <form class="card login-card" id="loginForm">
+    <div class="logos"><span class="logo studio-luce" role="img" aria-label="Studio Luce Gruppo Comet"></span><span class="logo its" role="img" aria-label="ITS Gruppo Comet"></span></div>
+    <h2>Accesso gestione</h2>
+    <p>Accedi con l’account amministratore configurato in Supabase Auth.</p>
+    <label for="email">Email</label><input class="field" id="email" type="email" autocomplete="username" required>
+    <label for="password">Password</label><input class="field" id="password" type="password" autocomplete="current-password" required>
+    <button class="btn primary full" type="submit" id="loginButton">Accedi</button>
+    <p class="foot" id="loginError" role="alert"></p>
+  </form>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./manager.js"></script>
+</body>
+</html>

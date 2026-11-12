@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1d3a" />
+  <title>Dove la luce incontra il suono · Partecipa</title>
+  <link rel="stylesheet" href="./brand.css" />
+  <style>
+    .top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:calc(16px + env(safe-area-inset-top,0px)) 22px 16px}
+    .top .logos{--logo-h:38px}
+    main{width:min(680px,calc(100% - 32px));margin:26px auto 40px}
+    .hero{margin-bottom:26px}
+    .headline{font-weight:800;font-size:clamp(26px,6.4vw,40px);line-height:1.08;letter-spacing:-.01em;text-transform:uppercase;color:var(--white);margin:0 0 10px;text-wrap:balance}
+    .tagline{font-style:italic;font-weight:600;font-size:clamp(14px,3.6vw,17px);color:var(--white);margin:0 0 14px}
+    .lead{font-style:italic;font-weight:300;font-size:14px;line-height:1.65;color:var(--muted);margin:0;max-width:52ch}
+
+    .progress{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+    .progress-count{font-size:13px;white-space:nowrap;color:var(--white)}
+    .progress-count b{font-weight:800}
+    .progress-count span{font-weight:300}
+    .progress-track{flex:1;height:2px;background:var(--copper-line);border-radius:2px;overflow:hidden}
+    .progress-fill{height:100%;width:0;background:var(--copper);transition:width .5s ease}
+
+    .panel{background:linear-gradient(160deg,#10294ff2,#0a1d3af2);border:1px solid var(--copper-line);border-radius:22px;box-shadow:0 24px 60px #020a1a66}
+    .question-card{padding:clamp(22px,5vw,34px)}
+    .question{font-weight:600;font-size:clamp(19px,4.6vw,24px);line-height:1.4;color:var(--white);margin:0 0 8px}
+    .mode{font-style:italic;font-weight:400;font-size:13px;color:var(--copper-light);margin:0 0 20px}
+    .answers{display:grid;gap:10px}
+    .answer{width:100%;text-align:left;min-height:56px;border:1px solid #ffffff1f;background:#ffffff06;border-radius:14px;display:flex;align-items:center;gap:14px;padding:12px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+    .answer:hover{border-color:var(--copper-dim)}
+    .answer[aria-checked="true"]{border-color:var(--copper);background:#c39a801f}
+    .mark{height:20px;width:20px;flex:none;border:1.5px solid #a6b3c9;border-radius:50%;display:grid;place-items:center}
+    .multi .mark{border-radius:6px}
+    .answer[aria-checked="true"] .mark{border-color:var(--copper);background:var(--copper)}
+    .answer[aria-checked="true"] .mark:after{content:"";width:8px;height:8px;border-radius:50%;background:var(--navy-deep)}
+    .multi .answer[aria-checked="true"] .mark:after{width:9px;height:5px;border-radius:0;background:none;border-left:2px solid var(--navy-deep);border-bottom:2px solid var(--navy-deep);transform:translateY(-1px) rotate(-45deg)}
+    .answer-text{font-size:15px;line-height:1.4;color:var(--text)}
+    .card-bottom{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .helper{font-size:12px;font-style:italic;font-weight:300;color:var(--soft);text-align:center}
+
+    .thanks{padding:40px 26px 34px;text-align:center;margin-bottom:14px}
+    .check{height:64px;width:64px;margin:0 auto 18px;border-radius:50%;border:1.5px solid var(--copper);display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
+    .check:after{content:"";width:22px;height:11px;border-left:3px solid var(--copper);border-bottom:3px solid var(--copper);transform:translateY(-3px) rotate(-45deg)}
+    @keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+    .thanks h2{font-weight:800;text-transform:uppercase;font-size:clamp(22px,5.4vw,30px);line-height:1.15;margin:0 0 10px;color:var(--white)}
+    .thanks p{font-style:italic;font-weight:300;color:var(--muted);font-size:14px;line-height:1.6;margin:0}
+
+    .report{padding:24px clamp(18px,4vw,28px)}
+    .report-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
+    .report-head h3{font-weight:700;font-size:18px;margin:0 0 4px;color:var(--white)}
+    .report-head p{font-size:12px;font-style:italic;font-weight:300;color:var(--muted);margin:0}
+    .live{display:flex;align-items:center;gap:7px;color:var(--copper-light);font-size:12px;font-weight:600;white-space:nowrap}
+    .live i{width:7px;height:7px;border-radius:50%;background:var(--copper);animation:pulse 1.6s infinite}
+    @keyframes pulse{50%{opacity:.35}}
+    .report-question{padding:20px 0;border-bottom:1px solid var(--copper-line)}
+    .report-question:last-child{border-bottom:0;padding-bottom:4px}
+    .report-question h4{font-weight:600;font-size:15px;line-height:1.45;margin:0 0 4px;color:var(--white)}
+    .report-meta{font-size:12px;font-style:italic;font-weight:300;color:var(--muted);margin:0 0 14px}
+    .results{display:grid;gap:12px}
+    .result-row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:baseline}
+    .result-label{font-size:13px;color:var(--text);min-width:0}
+    .result-pct{font-size:13px;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums}
+    .result-track{grid-column:1/-1;height:6px;border-radius:6px;background:#ffffff14;overflow:hidden}
+    .result-fill{height:100%;border-radius:6px;background:#c39a8099;transition:width 1s cubic-bezier(.18,.75,.25,1)}
+    .result-row.mine .result-fill{background:var(--copper)}
+    .mine-tag{font-style:italic;font-weight:600;font-size:12px;color:var(--copper-light);margin-left:6px;white-space:nowrap}
+    .chart-foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--copper-line);display:flex;justify-content:space-between;gap:10px;color:var(--soft);font-size:11px;font-style:italic;font-weight:300}
+
+    .venue{display:flex;align-items:center;gap:12px;margin:34px auto 0;width:fit-content;max-width:100%}
+    .venue svg{flex:none;width:22px;height:30px}
+    .venue strong{display:block;font-weight:700;font-size:13px;text-transform:uppercase;color:var(--white)}
+    .venue span{display:block;font-style:italic;font-weight:300;font-size:13px;color:var(--text)}
+    .privacy{text-align:center;color:var(--soft);font-size:11px;font-style:italic;font-weight:300;margin:16px 0 0}
+
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:10}
+    .confetti i{position:absolute;top:-14px;width:2px;height:16px;border-radius:2px;animation:fall 2.6s ease-in forwards}
+    @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:0}}
+
+    @media(max-width:520px){
+      .top{padding-left:16px;padding-right:16px}
+      .top .logos{--logo-h:30px;gap:8px}
+      .date-line{font-size:11px}
+      main{margin-top:18px}
+      .question-card{padding:22px 16px}
+      .card-bottom .helper{display:none}
+    }
+    @media(max-width:370px){.date-line{display:none}}
+  </style>
+</head>
+<body>
+<div class="decor" aria-hidden="true"><div class="blob"></div><div class="ribbon"></div></div>
+<header class="top">
+  <div class="logos" aria-label="Studio Luce Gruppo Comet e ITS Impianti Tecnologici Speciali Gruppo Comet"><span class="logo studio-luce" role="img" aria-label="Studio Luce Gruppo Comet"></span><span class="logo its" role="img" aria-label="ITS Impianti Tecnologici Speciali Gruppo Comet"></span></div>
+  <div class="date-line"><b>20 NOVEMBRE 2026</b><span>ORE 17.45</span></div>
+</header>
+<main>
+  <div class="hero">
+    <h1 class="headline" id="headline">Dove la luce incontra il suono</h1>
+    <p class="tagline">Tu progetti l’emozione, la tecnologia fa il resto.</p>
+    <p class="lead" id="lead">Le tue risposte compongono la fotografia della sala.</p>
+  </div>
+
+  <div class="progress" id="progressBox">
+    <div class="progress-count"><b id="stepNum">1</b> <span>di 3</span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <section class="panel question-card" id="questionCard">
+    <h2 class="question" id="question"></h2>
+    <p class="mode" id="mode"></p>
+    <div class="answers" id="answers"></div>
+    <div class="card-bottom">
+      <button class="btn" id="previous" type="button">Indietro</button>
+      <span class="helper">Puoi cambiare le risposte fino all’invio.</span>
+      <button class="btn primary" id="continue" type="button" disabled>Continua</button>
+    </div>
+  </section>
+
+  <section class="panel thanks hidden" id="thanks">
+    <div class="check" aria-hidden="true"></div>
+    <h2>Grazie per la partecipazione</h2>
+    <p>Abbiamo ricevuto le tue risposte. Qui sotto vedi come sta rispondendo la sala.</p>
+  </section>
+
+  <section class="panel report hidden" id="report">
+    <div class="report-head">
+      <div><h3>La sala, in tempo reale</h3><p>Riepilogo di tutte le domande</p></div>
+      <div class="live"><i></i>Live</div>
+    </div>
+    <div id="reports"></div>
+    <div class="chart-foot"><span>I grafici si aggiornano con le risposte della platea</span><span id="updated">Appena aggiornato</span></div>
+  </section>
+
+  <div class="venue">
+    <svg viewBox="0 0 22 30" aria-hidden="true"><path fill="#c39a80" d="M11 0C4.9 0 0 4.8 0 10.8 0 18.4 9.4 28.4 9.8 28.8a1.6 1.6 0 0 0 2.4 0C12.6 28.4 22 18.4 22 10.8 22 4.8 17.1 0 11 0Zm0 15.6a4.8 4.8 0 1 1 0-9.6 4.8 4.8 0 0 1 0 9.6Z"/></svg>
+    <div><strong>Studio Luce RemaTarlazzi Macerata</strong><span>Via Fratelli Kennedy, 7/9 - Sforzacosta (MC)</span></div>
+  </div>
+  <p class="privacy" id="privacy">Risposte anonime, nessun dato personale richiesto</p>
+</main>
+<div class="confetti" id="confetti"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./client.js"></script>
+</body>
+</html>
