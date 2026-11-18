@@ -7,6 +7,7 @@
 --   · ogni domanda di un modello può accettare più risposte ("multi": true);
 --   · contatore dei partecipanti per sessione (participant_counts);
 --   · nuova funzione di invio submit_vote_multi; submit_vote resta compatibile.
+--   · un modello può avere da 1 a 3 domande (non più obbligatoriamente 3).
 --
 -- Il database conserva le sessioni chiuse e non consente di modificare o
 -- cancellare un voto già inviato. Le risposte grezze non sono leggibili dal browser.
@@ -17,7 +18,7 @@
 
 create table if not exists public.poll_catalog (
   slug text primary key,
-  option_counts integer[] not null check (cardinality(option_counts) = 3),
+  option_counts integer[] not null check (cardinality(option_counts) between 1 and 3),
   title text,
   questions jsonb,
   archived boolean not null default false
@@ -26,6 +27,11 @@ create table if not exists public.poll_catalog (
 alter table public.poll_catalog add column if not exists title text;
 alter table public.poll_catalog add column if not exists questions jsonb;
 alter table public.poll_catalog add column if not exists archived boolean not null default false;
+
+-- Da 1 a 3 domande per modello (prima erano obbligatorie 3).
+alter table public.poll_catalog drop constraint if exists poll_catalog_option_counts_check;
+alter table public.poll_catalog add constraint poll_catalog_option_counts_check
+  check (cardinality(option_counts) between 1 and 3);
 
 -- Nessun modello predefinito: i sondaggi si creano dal pannello di gestione.
 -- Se nel database esistono i modelli fissi della versione precedente (Conexa),
@@ -116,7 +122,7 @@ revoke execute on function public.is_admin() from public;
 grant execute on function public.is_admin() to anon, authenticated;
 
 -- Controllo lato server di un modello personalizzato:
--- 3 domande, testo 1–220 caratteri, 2–10 opzioni di 1–120 caratteri,
+-- da 1 a 3 domande, testo 1–220 caratteri, 2–10 opzioni di 1–120 caratteri,
 -- "multi" facoltativo ma, se presente, booleano;
 -- option_counts coerente con il numero di opzioni.
 create or replace function public.valid_poll_model(p_questions jsonb, p_counts integer[])
@@ -131,10 +137,10 @@ declare
   i integer := 0;
   n integer;
 begin
-  if p_questions is null or jsonb_typeof(p_questions) <> 'array' or jsonb_array_length(p_questions) <> 3 then
+  if p_questions is null or jsonb_typeof(p_questions) <> 'array' or jsonb_array_length(p_questions) not between 1 and 3 then
     return false;
   end if;
-  if p_counts is null or cardinality(p_counts) <> 3 then return false; end if;
+  if p_counts is null or cardinality(p_counts) <> jsonb_array_length(p_questions) then return false; end if;
   for q in select value from jsonb_array_elements(p_questions) loop
     i := i + 1;
     if jsonb_typeof(q) <> 'object' then return false; end if;
@@ -238,7 +244,7 @@ grant select on public.poll_admins to authenticated;
 -- Invio del voto (unica via di scrittura per il pubblico)
 -- ---------------------------------------------------------------------------
 
--- p_answers: tre array di indici, es. [[1], [0, 3], [2]].
+-- p_answers: un array di indici per ogni domanda del modello (da 1 a 3), es. [[1], [0, 3], [2]].
 -- Una domanda senza "multi": true accetta esattamente un indice.
 create or replace function public.submit_vote_multi(p_session_id uuid, p_participant_id uuid, p_answers jsonb)
 returns void
@@ -257,9 +263,9 @@ declare
   n integer;
   is_multi boolean;
   seen integer[];
+  n_questions integer;
 begin
-  if p_participant_id is null or p_answers is null
-     or jsonb_typeof(p_answers) <> 'array' or jsonb_array_length(p_answers) <> 3 then
+  if p_participant_id is null or p_answers is null or jsonb_typeof(p_answers) <> 'array' then
     raise exception 'Invalid vote';
   end if;
 
@@ -272,8 +278,12 @@ begin
   if current_status is null then raise exception 'Session not found'; end if;
   if current_status <> 'open' then raise exception 'Session is closed'; end if;
 
+  -- Serve una risposta per ciascuna domanda del modello.
+  n_questions := cardinality(allowed_counts);
+  if jsonb_array_length(p_answers) <> n_questions then raise exception 'Invalid vote'; end if;
+
   -- Validazione completa prima di scrivere qualsiasi cosa.
-  for q in 1..3 loop
+  for q in 1..n_questions loop
     sel := p_answers -> (q - 1);
     if jsonb_typeof(sel) <> 'array' then raise exception 'Invalid answer'; end if;
     n := jsonb_array_length(sel);
@@ -296,7 +306,7 @@ begin
   insert into public.vote_receipts(session_id, participant_id, selections)
   values (p_session_id, p_participant_id, p_answers);
 
-  for q in 1..3 loop
+  for q in 1..n_questions loop
     for el in select value from jsonb_array_elements(p_answers -> (q - 1)) loop
       insert into public.response_counts(session_id, question_index, option_index, vote_count)
       values (p_session_id, q - 1, (el #>> '{}')::integer, 1)
