@@ -6,7 +6,7 @@ const $ = id => document.getElementById(id);
 const configured = !SUPABASE_URL.includes('YOUR_PROJECT') && !SUPABASE_ANON_KEY.includes('YOUR_');
 const sessionId = new URLSearchParams(location.search).get('session');
 // choices[q] è sempre un array di indici: un solo elemento per le domande a scelta singola.
-let db, session, poll, step = 0, choices = [[], [], []], participantId, liveChannel, saving = false, resultsTimer = null;
+let db, session, poll, total = 3, step = 0, choices = [[], [], []], participantId, liveChannel, saving = false, resultsTimer = null;
 const draftKey = `conexa-draft-${sessionId}`, voteKey = `conexa-vote-${sessionId}`;
 
 start();
@@ -22,12 +22,14 @@ async function start() {
   if (fixed) poll = { ...fixed, questions: fixed.questions.map(q => [q[0], q[1], q[2] === true]) };
   if (!poll) {
     const { data: custom } = await db.from('poll_catalog').select('slug,title,questions').eq('slug', session.poll_slug).single();
-    if (custom?.title && Array.isArray(custom.questions) && custom.questions.length === 3
+    if (custom?.title && Array.isArray(custom.questions) && custom.questions.length >= 1 && custom.questions.length <= 3
         && custom.questions.every(q => typeof q?.text === 'string' && Array.isArray(q.options))) {
       poll = { slug: custom.slug, name: custom.title, questions: custom.questions.map(q => [q.text, q.options, q.multi === true]) };
     }
   }
   if (!poll) return fatal('Non riconosco questo sondaggio.');
+  total = poll.questions.length;
+  choices = poll.questions.map(() => []);
   $('headline').textContent = poll.name;
   document.title = `${poll.name} · Partecipa`;
   $('lead').textContent = 'Puoi rivedere e cambiare le tue scelte prima di inviare.';
@@ -36,7 +38,7 @@ async function start() {
   const storedVote = safeParse(localStorage.getItem(voteKey));
   const storedDraft = normalizeChoices(safeParse(localStorage.getItem(draftKey)));
   if (storedVote?.submitted) {
-    choices = normalizeChoices(storedVote.answers) || [[], [], []];
+    choices = normalizeChoices(storedVote.answers) || poll.questions.map(() => []);
     await showFinal(true);
   } else if (session.status === 'closed') {
     if (storedDraft) choices = storedDraft;
@@ -60,7 +62,7 @@ async function start() {
 
 // Accetta sia il formato attuale ([[0],[1,3],[2]]) sia quello precedente ([0,1,2]).
 function normalizeChoices(value) {
-  if (!Array.isArray(value) || value.length !== 3) return null;
+  if (!Array.isArray(value) || value.length !== total) return null;
   return value.map(item => Array.isArray(item) ? item.filter(Number.isInteger) : Number.isInteger(item) ? [item] : []);
 }
 
@@ -71,7 +73,8 @@ function renderQuestion() {
   $('progressBox').classList.remove('hidden'); $('questionCard').classList.remove('hidden');
   $('thanks').classList.add('hidden'); $('report').classList.add('hidden');
   $('stepNum').textContent = String(step + 1);
-  $('progressFill').style.width = `${((step + 1) / 3) * 100}%`;
+  $('stepTotal').textContent = `di ${total}`;
+  $('progressFill').style.width = `${((step + 1) / total) * 100}%`;
   $('question').textContent = q[0];
   $('mode').textContent = multi ? 'Puoi scegliere più risposte.' : 'Scegli una risposta.';
   $('answers').classList.toggle('multi', multi);
@@ -97,8 +100,8 @@ function renderQuestion() {
   $('previous').disabled = step === 0;
   $('previous').onclick = () => { if (step > 0) { step--; renderQuestion(); } };
   $('continue').disabled = choices[step].length === 0 || saving;
-  $('continue').textContent = step === 2 ? (saving ? 'Invio…' : 'Invia le risposte') : 'Continua';
-  $('continue').onclick = step === 2 ? submitVote : () => { if (choices[step].length) { step++; renderQuestion(); } };
+  $('continue').textContent = step === total - 1 ? (saving ? 'Invio…' : 'Invia le risposte') : 'Continua';
+  $('continue').onclick = step === total - 1 ? submitVote : () => { if (choices[step].length) { step++; renderQuestion(); } };
 }
 
 async function submitVote() {
