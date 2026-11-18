@@ -24,7 +24,7 @@ Per un'installazione nuova valgono i passaggi della v2: crea il progetto Supabas
 
 ## Creare un sondaggio
 
-Nel pannello apri **Crea un nuovo modello**: titolo e tre domande, da 2 a 10 opzioni ciascuna (una per riga).
+Nel pannello apri **Crea un nuovo modello**: titolo e da 1 a 3 domande, da 2 a 10 opzioni ciascuna (una per riga). Le domande lasciate vuote vengono ignorate.
 Sotto ogni domanda l'interruttore **Consenti più risposte** abilita la scelta multipla per quella domanda; le altre restano a scelta singola.
 **Crea e avvia** salva il modello e apre subito una sessione con il suo QR.
 
