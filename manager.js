@@ -108,7 +108,7 @@ function updateArchiveButton() {
 $('pollChoice').addEventListener('change', () => { updateArchiveButton(); updateCreateState(); });
 
 function renderQuestionBuilder() {
-  $('questionBuilder').innerHTML = [0,1,2].map(i => `<div class="question-block"><strong>Domanda ${i+1}</strong><label for="customQuestion${i}">Testo della domanda</label><textarea id="customQuestion${i}" maxlength="220" placeholder="Scrivi la domanda"></textarea><label for="customOptions${i}">Opzioni, una per riga (max 120 caratteri)</label><textarea id="customOptions${i}" placeholder="Opzione 1&#10;Opzione 2&#10;Opzione 3"></textarea><label class="multi-toggle"><input type="checkbox" id="customMulti${i}"> Consenti più risposte</label></div>`).join('');
+  $('questionBuilder').innerHTML = [0,1,2].map(i => `<div class="question-block"><strong>Domanda ${i+1}${i ? ' <small>(facoltativa)</small>' : ''}</strong><label for="customQuestion${i}">Testo della domanda</label><textarea id="customQuestion${i}" maxlength="220" placeholder="Scrivi la domanda"></textarea><label for="customOptions${i}">Opzioni, una per riga (max 120 caratteri)</label><textarea id="customOptions${i}" placeholder="Opzione 1&#10;Opzione 2&#10;Opzione 3"></textarea><label class="multi-toggle"><input type="checkbox" id="customMulti${i}"> Consenti più risposte</label></div>`).join('');
 }
 
 async function loadCustomPolls() {
@@ -135,18 +135,22 @@ $('saveCustomPoll').onclick = createCustomPoll;
 async function createCustomPoll() {
   if (!isAdmin) return;
   const title = $('newPollTitle').value.trim();
-  const questions = [0,1,2].map(i => ({
+  // Da 1 a 3 domande: i blocchi lasciati completamente vuoti vengono ignorati.
+  const filled = [0,1,2].map(i => ({
+    n: i + 1,
     text: $(`customQuestion${i}`).value.trim(),
     options: $(`customOptions${i}`).value.split(/\r?\n/).map(s => s.trim()).filter(Boolean),
     multi: $(`customMulti${i}`).checked
-  }));
+  })).filter(q => q.text || q.options.length);
   if (!title) return setBuilderStatus('Inserisci il titolo del sondaggio.');
-  const invalid = questions.findIndex(q => !q.text || q.options.length < 2 || q.options.length > 10);
-  if (invalid >= 0) return setBuilderStatus(`Completa la domanda ${invalid+1} con 2–10 opzioni.`);
-  const long = questions.findIndex(q => q.options.some(o => o.length > 120));
-  if (long >= 0) return setBuilderStatus(`Domanda ${long+1}: ogni opzione deve stare entro 120 caratteri.`);
-  const dup = questions.findIndex(q => new Set(q.options.map(o => o.toLowerCase())).size !== q.options.length);
-  if (dup >= 0) return setBuilderStatus(`Domanda ${dup+1}: ci sono opzioni ripetute.`);
+  if (!filled.length) return setBuilderStatus('Inserisci almeno una domanda.');
+  const invalid = filled.find(q => !q.text || q.options.length < 2 || q.options.length > 10);
+  if (invalid) return setBuilderStatus(`Completa la domanda ${invalid.n} con 2–10 opzioni.`);
+  const long = filled.find(q => q.options.some(o => o.length > 120));
+  if (long) return setBuilderStatus(`Domanda ${long.n}: ogni opzione deve stare entro 120 caratteri.`);
+  const dup = filled.find(q => new Set(q.options.map(o => o.toLowerCase())).size !== q.options.length);
+  if (dup) return setBuilderStatus(`Domanda ${dup.n}: ci sono opzioni ripetute.`);
+  const questions = filled.map(({ text, options, multi }) => ({ text, options, multi }));
   $('saveCustomPoll').disabled = true; setBuilderStatus('Salvataggio…');
   const slug = `custom-${crypto.randomUUID().replaceAll('-','')}`;
   const { error } = await db.from('poll_catalog').insert({
@@ -266,7 +270,7 @@ function sessionMarkup(session, poll, rows, people) {
   const answers = new Map(rows.map(r => [`${r.question_index}-${r.option_index}`, Number(r.vote_count)]));
   const multiCount = poll.questions.filter(q => q[2]).length;
   return `<div class="session-title"><div><h2>${esc(poll.name)}</h2><p>Avviata il ${new Date(session.created_at).toLocaleString('it-IT')}, codice ${session.id.slice(0,8)}${session.closed_at ? `, chiusa il ${new Date(session.closed_at).toLocaleString('it-IT')}` : ''}</p></div><span class="state ${session.status === 'closed' ? 'closed' : ''}">${session.status === 'open' ? '● In corso' : 'Archiviata'}</span></div>
-    <div class="stats"><div class="stat"><strong id="responsesTotal">${people.toLocaleString('it-IT')}</strong><span>partecipanti</span></div><div class="stat"><strong>3</strong><span>domande</span></div><div class="stat"><strong>${multiCount}</strong><span>a risposta multipla</span></div></div>
+    <div class="stats"><div class="stat"><strong id="responsesTotal">${people.toLocaleString('it-IT')}</strong><span>partecipanti</span></div><div class="stat"><strong>${poll.questions.length}</strong><span>${poll.questions.length === 1 ? 'domanda' : 'domande'}</span></div><div class="stat"><strong>${multiCount}</strong><span>a risposta multipla</span></div></div>
     ${session.status === 'open' && isAdmin ? '<div class="close-row"><button type="button" class="btn danger" id="closeSession">Chiudi e archivia sessione</button></div>' : ''}
     <div class="questions" id="questions">${poll.questions.map((q,qi)=>questionMarkup(q,qi,answers,people)).join('')}</div>`;
 }
